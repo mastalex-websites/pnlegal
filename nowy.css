@@ -442,9 +442,10 @@ section.story .story-cap { max-width: 640px; margin: 0 auto; font-size: 15px; li
   .form-card .row { grid-template-columns: 1fr; }
 }
 
-/* środkowanie na telefonie: fakty (strona główna), liczby, „Gdzie się sprawdzam”, uprawnienia (O mnie) */
+/* środkowanie na telefonie: fakty i „Jak pracuję” / „Referencja” (strona główna), liczby, „Gdzie się sprawdzam”, uprawnienia (O mnie) */
 @media (max-width: 760px) {
-  .fact, .stat, .skill-list li, .creds > div { text-align: center; }
-  .fact .fact-art, .stat .fact-art, .skill-list .q-art, .creds .q-art { margin-left: auto; margin-right: auto; }
+  .fact, .stat, .skill-list li, .creds > div, .approach-text { text-align: center; }
+  .fact .fact-art, .stat .fact-art, .skill-list .q-art, .creds .q-art, .quality-list .q-art { margin-left: auto; margin-right: auto; }
   .fact span, .stat > span, .skill-list p, .creds p { margin-left: auto; margin-right: auto; }
+  .approach-text h2, .approach-text > p, .approach-text blockquote, .approach-text cite { margin-left: auto; margin-right: auto; }
 }
