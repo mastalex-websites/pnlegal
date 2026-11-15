@@ -21,11 +21,38 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 [role="tabpanel"]:focus-visible { outline: 2px solid #91a67f; outline-offset: 6px; }
 .page-shell { max-width: 1920px; margin: auto; padding: 14px 14px 0; }
 
-/* slot na hero */
-.hero-slot { min-height: 100svh; display: grid; place-items: center; border-radius: 24px; background: #1b211d; border: 1px dashed var(--line); color: var(--muted); font-size: 12px; letter-spacing: .15em; text-transform: uppercase; }
-.hero-slot p { margin: 0; }
-/* menu na stronie głównej: to samo co na podstronach, jasne na ciemnym slocie hero */
-.hero-slot { position: relative; }
+/* ===== HERO wg wzorca „Personal Portfolio” =====
+   Ze wzorca (% szerokości / wysokości hero): pasek 4,4% (podpis 18–33%, kreska, rok przy 93%), liczby 13% / 22%,
+   wielki napis 13% / ~38–63%, zdanie ~68%, „Przewiń” 6% od dołu; zdjęcie: głowa od ~13% wysokości, środek twarzy ~69% szerokości,
+   ramiona ucięte dolną krawędzią. Własne: zamiast „Hello” imię i nazwisko w dwóch wierszach, zmniejszone tak, żeby kończyło się przed głową. */
+.hero { position: relative; min-height: calc(100svh - 28px); overflow: hidden; border-radius: 24px; background: var(--paper); color: var(--ink); }
+.hero > :not(.hero-photo) { z-index: 1; }
+.hero-photo { position: absolute; z-index: 0; top: 6%; left: 69%; height: min(195%, 112vw); width: auto; max-width: none; transform: translateX(-43%); } /* 112vw: na węższych ekranach głowa nie rośnie ponad ~27% szerokości i nie wchodzi na imię */
+.hero-rail { position: absolute; left: 4.4%; top: 18%; bottom: 7%; margin: 0; display: flex; flex-direction: column; align-items: center; gap: 18px; font-size: 11px; letter-spacing: .06em; color: #6f7a72; }
+.hero-rail span { writing-mode: vertical-rl; transform: rotate(180deg); white-space: nowrap; }
+.hero-rail i { flex: 1; width: 1px; background: #b4bcb6; }
+.hero-stats { position: absolute; left: 13%; top: 20%; display: flex; gap: 46px; }
+.hero-stats strong { display: block; font-size: clamp(30px, 3.1vw, 48px); font-weight: 300; line-height: 1; letter-spacing: -.045em; }
+.hero-stats span { display: block; max-width: 230px; margin-top: 9px; font-size: 12px; line-height: 1.5; color: #56615a; }
+.hero-name { position: absolute; left: 13%; top: 40%; margin: 0; font-size: min(8vw, 15svh); font-weight: 300; line-height: .95; letter-spacing: -.055em; }
+.hero-sub { position: absolute; left: 13%; top: 72%; max-width: 400px; margin: 0; font-size: 15px; line-height: 1.6; color: #3d4640; }
+.hero-down { position: absolute; left: 13%; bottom: 6%; font-size: 13px; }
+.hero-down:hover { color: #63725e; }
+@media (max-width: 760px) { .hero { min-height: calc(100svh - 22px); border-radius: 18px; } }
+/* telefon i tablet w pionie: liczby, imię i zdanie jedno pod drugim, pod nimi zdjęcie wypełnia resztę wysokości
+   (przycięte od dołu, głowa i ramiona), więc nic na nic nie najeżdża bez względu na wysokość ekranu */
+@media (max-width: 760px), (max-aspect-ratio: 4/5) {
+  .hero { display: flex; flex-direction: column; align-items: flex-start; padding: max(104px, 13.5svh) 7% 0; }
+  .hero-stats, .hero-name, .hero-sub, .hero-photo { position: static; }
+  .hero-rail, .hero-down { display: none; }
+  .hero-stats { gap: 24px; }
+  .hero-stats strong { font-size: 30px; }
+  .hero-stats span { max-width: 150px; font-size: 11px; }
+  .hero-name { margin-top: 4svh; font-size: min(15vw, 8svh); }
+  .hero-sub { margin-top: 18px; max-width: 34em; font-size: 14px; }
+  .hero-photo { flex: 1 1 0; align-self: stretch; min-height: 38svh; width: auto; height: auto; margin: 3svh -8.2% 0; transform: none; object-fit: cover; object-position: 50% 0; }
+}
+/* menu na stronie głównej: to samo co na podstronach; na ciemnym tle wersja jasna (nav-dark) */
 /* jedno menu dla hero i opowieści: przyklejone tam, gdzie panel (14 px), zjeżdża ze scrollem z ciemnego slotu na jasny panel
    i odjeżdża razem z nim. Dół toru (wysokość panelu minus wysokość menu) i kolor (nav-dark na ciemnym) dopasowuje nowy.js */
 .top-run { position: relative; }
@@ -33,7 +60,11 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 .run-track > .nav { position: sticky; top: 14px; pointer-events: auto; color: var(--ink); }
 .run-track > .nav.nav-dark { color: var(--light); }
 .run-track > .nav, .run-track > .nav a { transition: color .25s, border-color .25s; }
-@media (max-width: 760px) { .run-track > .nav { top: 8px; } }
+/* nad jasnym panelem pod menu pas papieru, który gaśnie ku dołowi: chmury i słońce opowieści nie wchodzą pod napisy menu */
+.run-track > .nav { border-radius: 24px 24px 0 0; }
+.run-track > .nav::before { content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(180deg, var(--paper) 62%, #e9edeb00); opacity: 0; transition: opacity .25s; pointer-events: none; }
+.run-track > .nav.on-paper::before { opacity: 1; }
+@media (max-width: 760px) { .run-track > .nav { top: 8px; border-radius: 18px 18px 0 0; } }
 .nav-dark { color: var(--light); }
 .nav-dark .nav-links > a:hover, .nav-dark .nav-links > a[aria-current] { color: var(--sage); }
 .nav-dark .nav-submit { border-color: #edeee84d; }
@@ -54,7 +85,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 .anim .story-steps { display: block; position: absolute; left: 5%; top: calc(clamp(70px, 11vh, 120px) + 48px); z-index: 2; width: min(560px, 88%); pointer-events: none; }
 .story-step { position: absolute; left: 0; right: 0; top: 0; opacity: 0; visibility: hidden; }
 .story-step .eyebrow { display: block; margin-bottom: 18px; font-size: 10px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: #63725e; }
-.story-t { margin: 0; font-size: clamp(30px, 3vw, 50px); font-weight: 400; line-height: 1.06; letter-spacing: -.05em; }
+.story-t { margin: 0; font-size: clamp(28px, min(3vw, 4.6vh), 50px); /* także od wysokości: na niskich ekranach długi krok 2 kończy się nad dachem fabryki (0,56 wysokości panelu) */ font-weight: 400; line-height: 1.06; letter-spacing: -.05em; }
 .story-d { margin: 18px 0 0; max-width: 440px; font-size: 15px; line-height: 1.7; color: #515d55; }
 .story-step .button { margin-top: 26px; pointer-events: auto; }
 .anim .story-hint { display: flex; gap: 22px; align-items: center; position: absolute; right: 4%; bottom: 26px; z-index: 3; font-size: 11px; color: #515d55; }
@@ -201,7 +232,6 @@ footer { width: 88%; margin: auto; display: flex; justify-content: space-between
 }
 @media (max-width: 760px) {
   .page-shell { padding: 8px 8px 0; }
-  .hero-slot { border-radius: 18px; }
   .dt { display: none; }
   .story-scene { border-radius: 18px; }
   .anim .story-pin { height: max(800vh, 5600px); }

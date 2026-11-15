@@ -136,8 +136,7 @@
     function kick() { read(); if (!run) { run = true; requestAnimationFrame(tick); } }
     addEventListener('scroll', kick, { passive: true });
     addEventListener('resize', function () { layout(); kick(); draw(cur); });
-    layout(); read(); cur = target; draw(cur);
-  })();
+    layout(); read(); cur = target; draw(cur);  })();
 
   /* ---------- B) ILUSTRACJE W KARTACH ---------- */
   (function () {
@@ -292,10 +291,14 @@
     var track = nav.parentNode;
     // tor kończy się tak, że menu odkleja się w tej samej chwili co panel i odjeżdża razem z nim
     function fit() { track.style.bottom = Math.max(0, scene.offsetHeight - nav.offsetHeight) + 'px'; }
-    // jasny tekst na ciemnym slocie hero, ciemny na papierze panelu; przełącza się, gdy krawędź panelu mija środek menu
+    // ciemny tekst na jasnym hero i na papierze panelu, jasny tylko w ciemnej szczelinie między nimi
+    var hero = document.getElementById('hero');
     function tone() {
-      var n = nav.getBoundingClientRect(), s = scene.getBoundingClientRect(), mid = n.top + n.height / 2;
-      nav.classList.toggle('nav-dark', !(s.top <= mid && s.bottom >= mid));
+      var n = nav.getBoundingClientRect(), s = scene.getBoundingClientRect(), mid = n.top + n.height / 2, dark = true, paper = s.top <= mid && s.bottom >= mid;
+      if (paper) dark = false;
+      else if (hero) { var h = hero.getBoundingClientRect(); if (h.top <= mid && h.bottom >= mid) dark = false; }
+      nav.classList.toggle('nav-dark', dark);
+      nav.classList.toggle('on-paper', paper); // pas papieru pod menu tylko nad panelem opowieści
     }
     addEventListener('scroll', tone, { passive: true });
     addEventListener('resize', function () { fit(); tone(); });
