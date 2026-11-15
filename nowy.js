@@ -16,37 +16,65 @@
   }
 
   /* ---------- A) OPOWIEŚĆ KRESKĄ ---------- */
+  // Jedna ciągła panorama: prawnik idzie przez pięć scen, kamera jedzie za nim, sceny rysują się kreską.
+  // Mechanika postępu i rysowania jak w kredytyubezpieczenia (sticky + pathLength + wygładzanie .14).
   (function () {
     var root = document.documentElement, pin = document.getElementById('story-pin');
     if (!pin || !root.classList.contains('anim')) return;
     var svg = document.getElementById('story-art'), hint = pin.querySelector('.story-hint'), bar = pin.querySelector('.story-bar i');
     var steps = [].slice.call(pin.querySelectorAll('.story-step'));
-    // kropka jadąca po ścieżce (krok 4: wybiera "inne rozwiązanie")
-    var followers = [].slice.call(svg.querySelectorAll('[data-follow]')).map(function (el) {
-      var path = document.getElementById(el.dataset.follow), q = el.dataset.r.split(' ');
-      return { el: el, path: path, len: path.getTotalLength(), s: +q[0], e: +q[1] };
-    });
-    var groups = [].slice.call(svg.querySelectorAll('g[data-s]')).map(function (g) {
-      var els = [].slice.call(g.querySelectorAll('path,rect,circle')), n = els.length, dur = Math.min(1, Math.max(.22, 4 / n));
+    var cfg = JSON.parse(svg.getAttribute('data-cfg')), K = cfg.keys, ARM = cfg.arm, GND = cfg.gnd;
+    var all = function (s) { return [].slice.call(svg.querySelectorAll(s)); };
+    var J = function (el, a) { var o = JSON.parse(el.getAttribute(a)); if (!Array.isArray(o)) o.el = el; return o; };
+    var groups = all('g[data-s]').map(function (g) {
+      var els = [].slice.call(g.querySelectorAll('path,rect,circle,ellipse')), n = els.length;
       els.forEach(function (el) { el.setAttribute('pathLength', '1'); el.style.strokeDasharray = '1 1'; el.style.strokeDashoffset = '1'; el.style.visibility = 'hidden'; });
-      return { els: els, s: +g.dataset.s, e: +g.dataset.e, dur: dur, last: -1 };
+      return { els: els, s: +g.dataset.s, e: +g.dataset.e, dur: Math.min(1, Math.max(.22, 4 / n)), last: -1 };
     });
-    var fades = [].slice.call(svg.querySelectorAll('[data-f]')).map(function (g) { var q = g.dataset.f.split(' '); return { el: g, s: +q[0], e: +q[1] }; });
-    // kamera: każdy krok ma własny panel (1800 jednostek), przejazd w przerwie między tekstami
-    var camKeys = [[0, 0], [.17, 0], [.21, 1800], [.37, 1800], [.41, 3600], [.57, 3600], [.61, 5400], [.77, 5400], [.81, 7200], [1, 7200]];
-    function keyed(keys, p) {
-      for (var i = 1; i < keys.length; i++) if (p <= keys[i][0]) {
-        var a = keys[i - 1], b = keys[i], t = (p - a[0]) / (b[0] - a[0] || 1);
-        return a[1] + (b[1] - a[1]) * ease(clamp(t));
+    var fades = all('[data-f]').map(function (el) { return { el: el, q: el.dataset.f.split(' ').map(Number) }; });
+    var ops = all('[data-op]').map(function (el) { return { el: el, k: J(el, 'data-op') }; });
+    var rots = all('[data-rot]').map(function (el) { return J(el, 'data-rot'); });
+    var mvs = all('[data-mv]').map(function (el) { return J(el, 'data-mv'); });
+    var loops = all('[data-loop]').map(function (el) { return J(el, 'data-loop'); });
+    var lns = all('[data-ln]').map(function (el) { return J(el, 'data-ln'); });
+    var pars = all('[data-par]').map(function (el) { return { el: el, k: +el.dataset.par }; });
+    var fols = all('[data-follow]').map(function (el) {
+      var o = J(el, 'data-follow'), path = document.getElementById(o.p);
+      return { el: el, path: path, len: path.getTotalLength(), s: o.r[0], e: o.r[1],
+        wheels: [].slice.call(el.querySelectorAll('[data-wheel]')).map(function (w) { return { el: w, c: w.dataset.wheel, r: +w.dataset.r }; }) };
+    });
+    var W = document.getElementById('story-walker'), bob = W.querySelector('.w-bob');
+    var limb = function (c) { var el = W.querySelector('.' + c); return { el: el, b: el.dataset.b }; };
+    var legA = limb('w-legA'), legB = limb('w-legB'), armF = limb('w-armF'), armB = limb('w-armB');
+    var sun = document.getElementById('story-sun'), rays = document.getElementById('story-rays');
+
+    function at(k, p, lin) { // klucze [[p, v1, v2, ...], ...] → [v1, v2, ...]
+      if (p <= k[0][0]) return k[0].slice(1);
+      for (var i = 1; i < k.length; i++) if (p <= k[i][0]) {
+        var a = k[i - 1], b = k[i], t = (p - a[0]) / (b[0] - a[0] || 1), out = [];
+        if (!lin) t = ease(t);
+        for (var j = 1; j < a.length; j++) out.push(a[j] + (b[j] - a[j]) * t);
+        return out;
       }
-      return keys[keys.length - 1][1];
+      return k[k.length - 1].slice(1);
     }
+    function groundY(x) { // górna droga w kroku 4, poza nią grunt y=860
+      if (x <= GND[0][0] || x >= GND[GND.length - 1][0]) return 860;
+      for (var i = 1; i < GND.length; i++) if (x <= GND[i][0]) {
+        var a = GND[i - 1], b = GND[i];
+        return a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0] || 1);
+      }
+      return 860;
+    }
+    function turn(l, a) { l.el.setAttribute('transform', 'translate(' + l.b + ') rotate(' + a.toFixed(2) + ')'); }
     var narrow = false;
     function layout() {
       var ratio = innerWidth / innerHeight; narrow = ratio < 1.2;
       svg.setAttribute('preserveAspectRatio', narrow || ratio > 1.85 ? 'xMidYMax meet' : 'xMidYMax slice');
     }
     function draw(p) {
+      var v = at(K, p), x = v[0], vx = narrow ? v[2] : v[1], vw = narrow ? 1100 : 1800, i;
+      svg.setAttribute('viewBox', vx.toFixed(1) + ' 0 ' + vw + ' 1000');
       groups.forEach(function (g) {
         var gp = clamp((p - g.s) / (g.e - g.s));
         if (gp === g.last) return; g.last = gp;
@@ -56,15 +84,41 @@
           el.style.strokeDashoffset = 1 - t; el.style.visibility = t > 0 ? 'visible' : 'hidden';
         }
       });
-      fades.forEach(function (f) { f.el.style.opacity = clamp((p - f.s) / (f.e - f.s)); });
-      followers.forEach(function (f) {
-        var t = clamp((p - f.s) / (f.e - f.s)), q = f.path.getPointAtLength(f.len * ease(t));
-        f.el.setAttribute('cx', q.x.toFixed(1)); f.el.setAttribute('cy', q.y.toFixed(1));
-        f.el.style.opacity = t > 0 ? 1 : 0;
+      fades.forEach(function (f) {
+        var q = f.q, o = clamp((p - q[0]) / (q[1] - q[0]));
+        if (q.length > 3) o = Math.min(o, 1 - clamp((p - q[2]) / (q[3] - q[2])));
+        f.el.style.opacity = o;
       });
-      var cam = keyed(camKeys, p);
-      // wąski ekran: okno 1080 jednostek na rysunek panelu (treść leży w x 640–1660)
-      svg.setAttribute('viewBox', narrow ? (cam + 610).toFixed(1) + ' 0 1080 1000' : cam.toFixed(1) + ' 0 1800 1000');
+      ops.forEach(function (o) { o.el.style.opacity = at(o.k, p, 1)[0].toFixed(3); });
+      rots.forEach(function (o) { o.el.setAttribute('transform', 'rotate(' + at(o.k, p, o.lin)[0].toFixed(2) + ' ' + o.c[0] + ' ' + o.c[1] + ')'); });
+      mvs.forEach(function (o) { var m = at(o.k, p, o.lin); o.el.setAttribute('transform', 'translate(' + m[0].toFixed(1) + ' ' + m[1].toFixed(1) + ')'); });
+      loops.forEach(function (o) { // dym: wznosi się, rośnie i gaśnie, dopóki fabryka pracuje
+        if (p <= o.s || p >= o.e) { o.el.style.opacity = 0; return; }
+        var t = ((p - o.s) / (o.e - o.s) * o.n + (o.ph || 0)) % 1, sc = 1 + (o.g || 0) * t;
+        o.el.setAttribute('transform', 'translate(' + (o.d[0] * t + o.c[0] * (1 - sc)).toFixed(1) + ' ' + (o.d[1] * t + o.c[1] * (1 - sc)).toFixed(1) + ') scale(' + sc.toFixed(3) + ')');
+        o.el.style.opacity = Math.sin(Math.PI * t).toFixed(3);
+      });
+      lns.forEach(function (o) { o.el.setAttribute('d', 'M' + o.x + ' ' + o.y + 'V' + at(o.k, p)[0].toFixed(1)); });
+      pars.forEach(function (o) { o.el.setAttribute('transform', 'translate(' + (vx * (1 - o.k)).toFixed(1) + ' 0)'); });
+      fols.forEach(function (f) { // auto zarządu: jedzie po drodze, przechyla się na rampie, koła się toczą
+        var t = clamp((p - f.s) / (f.e - f.s)), d = f.len * ease(t), q = f.path.getPointAtLength(d),
+          q1 = f.path.getPointAtLength(Math.max(0, d - 2)), q2 = f.path.getPointAtLength(Math.min(f.len, d + 2)),
+          a = Math.atan2(q2.y - q1.y, q2.x - q1.x) * 57.2958;
+        f.el.setAttribute('transform', 'translate(' + q.x.toFixed(1) + ' ' + q.y.toFixed(1) + ') rotate(' + a.toFixed(2) + ')');
+        f.wheels.forEach(function (w) { w.el.setAttribute('transform', 'rotate(' + (d / w.r * 57.2958 % 360).toFixed(1) + ' ' + w.c + ')'); });
+      });
+      // postać: krok wynika z przebytej drogi, więc zwalnia i staje razem z kamerą
+      var amp = 0;
+      for (i = 1; i < K.length; i++) if (p <= K[i][0]) {
+        if (K[i][1] !== K[i - 1][1]) { var t = clamp((p - K[i - 1][0]) / (K[i][0] - K[i - 1][0])); amp = Math.min(1, 6.6 * t * (1 - t)); }
+        break;
+      }
+      var L = 26 * amp * Math.sin(x / 19), pose = at(ARM, p)[0];
+      W.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + groundY(x).toFixed(1) + ') scale(1.25)');
+      bob.setAttribute('transform', 'translate(0 ' + (55 * (1 - Math.cos(L / 57.2958))).toFixed(2) + ')');
+      turn(legA, L); turn(legB, -L); turn(armB, .75 * L); turn(armF, pose - .75 * L);
+      sun.setAttribute('transform', 'translate(' + (vx + vw - 270).toFixed(1) + ' 0)');
+      rays.setAttribute('transform', 'rotate(' + (p * 240).toFixed(1) + ' 0 150)');
       hint.style.opacity = 1 - clamp(p / .03); hint.style.visibility = p < .03 ? 'visible' : 'hidden';
       bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
       steps.forEach(function (s) {
@@ -76,7 +130,7 @@
     function read() { var rc = pin.getBoundingClientRect(); target = clamp(-rc.top / (pin.offsetHeight - innerHeight)); }
     function tick() {
       var d = target - cur;
-      if (Math.abs(d) < .0006) { cur = target; draw(cur); run = false; return; }
+      if (Math.abs(d) < .0004) { cur = target; draw(cur); run = false; return; }
       cur += d * .14; draw(cur); requestAnimationFrame(tick);
     }
     function kick() { read(); if (!run) { run = true; requestAnimationFrame(tick); } }
