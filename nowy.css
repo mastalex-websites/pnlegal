@@ -329,6 +329,10 @@ footer { width: 88%; margin: auto; display: flex; justify-content: space-between
 .duo h2 { margin: 18px 0 26px; font-size: clamp(30px, 3vw, 48px); font-weight: 400; line-height: 1.08; letter-spacing: -.05em; }
 .duo-p { margin: 0; color: #d0d8cb; font-size: 15px; line-height: 1.8; }
 .duo .split-art { margin-top: 10px; }
+/* lewa kolumna „Droga zawodowa”: rysunek do nagłówka, trzyma się obok osi lat */
+.duo-art { display: block; width: 100%; max-width: 420px; height: auto; margin-top: 30px; color: var(--sage); }
+.duo-sticky { position: sticky; top: 40px; }
+@media (max-width: 960px) { .duo-sticky { position: static; } .duo-art { max-width: 340px; margin-top: 6px; } }
 .wide-art { display: block; width: 100%; max-width: 360px; height: auto; margin: 18px 0 10px; color: var(--sage); }
 .process-list { padding: 0; margin: 0; list-style: none; }
 .process-list > li { display: flex; gap: 18px; padding: 15px 0; border-top: 1px solid #53604e; }
