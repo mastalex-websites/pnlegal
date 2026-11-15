@@ -441,3 +441,10 @@ section.story .story-cap { max-width: 640px; margin: 0 auto; font-size: 15px; li
   .form-card { padding: 24px; }
   .form-card .row { grid-template-columns: 1fr; }
 }
+
+/* środkowanie na telefonie: fakty (strona główna), liczby, „Gdzie się sprawdzam”, uprawnienia (O mnie) */
+@media (max-width: 760px) {
+  .fact, .stat, .skill-list li, .creds > div { text-align: center; }
+  .fact .fact-art, .stat .fact-art, .skill-list .q-art, .creds .q-art { margin-left: auto; margin-right: auto; }
+  .fact span, .stat > span, .skill-list p, .creds p { margin-left: auto; margin-right: auto; }
+}
