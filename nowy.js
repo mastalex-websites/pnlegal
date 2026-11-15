@@ -151,7 +151,8 @@
         });
         return { shapes: shapes, start: +g.dataset.s, end: +g.dataset.e, duration: Math.min(1, Math.max(.22, 4 / shapes.length)), last: -1 };
       });
-      return { holder: holder, groups: groups, current: -1, painted: -1 };
+      var fades = [].slice.call(holder.querySelectorAll('[data-f]')).map(function (el) { var q = el.dataset.f.split(' '); return { el: el, s: +q[0], e: +q[1] }; });
+      return { holder: holder, groups: groups, fades: fades, current: -1, painted: -1 };
     });
     if (!animated) return;
     function paint(item, progress) {
@@ -165,6 +166,7 @@
           s.style.strokeDashoffset = (1 - a).toFixed(4); s.style.visibility = a > 0 ? 'visible' : 'hidden';
         });
       });
+      item.fades.forEach(function (f) { f.el.style.opacity = clamp((progress - f.s) / (f.e - f.s)).toFixed(3); }); // podpisy pod rysunkiem
     }
     function target(item) {
       if (reduce.matches) return 1;
