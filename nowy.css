@@ -24,6 +24,13 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 /* slot na hero */
 .hero-slot { min-height: 100svh; display: grid; place-items: center; border-radius: 24px; background: #1b211d; border: 1px dashed var(--line); color: var(--muted); font-size: 12px; letter-spacing: .15em; text-transform: uppercase; }
 .hero-slot p { margin: 0; }
+/* menu na stronie głównej: to samo co na podstronach, jasne na ciemnym slocie hero */
+.hero-slot { position: relative; }
+.hero-slot > .nav { position: absolute; top: 0; left: 0; right: 0; text-transform: none; letter-spacing: normal; }
+.nav-dark { color: var(--light); }
+.nav-dark .nav-links > a:hover, .nav-dark .nav-links > a[aria-current] { color: var(--sage); }
+.nav-dark .nav-submit { border-color: #edeee84d; }
+.nav-dark .brand span { letter-spacing: .28em; }
 
 /* ===== OPOWIEŚĆ KRESKĄ =====
    Mechanika 1:1 z kredytyubezpieczenia (.hero-pin / sticky / story-step / story-bar).
