@@ -11,19 +11,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script>if(!matchMedia('(prefers-reduced-motion: reduce)').matches)document.documentElement.classList.add('anim')</script>
-<link rel="stylesheet" href="./nowy.css?v=16">
+<link rel="stylesheet" href="./nowy.css?v=18">
 </head>
 <body>
 <div class="page-shell">
 
-  <!-- HERO: wg zrzutu od klienta, wstawiany osobno. Tu tylko slot. -->
-  <section class="hero-slot" id="hero" aria-label="Hero (slot)">
+  <!-- jedno menu dla hero i opowieści: przyklejone u góry, zjeżdża ze scrollem z ciemnego slotu na jasny panel
+       i odjeżdża razem z nim (tor i kolor ustawia nowy.js, część E) -->
+  <div class="top-run">
+  <div class="run-track">
     <nav class="nav nav-dark" aria-label="Nawigacja główna">
 <a class="brand" href="index.html" aria-label="PNLEGAL, strona główna">PNLEGAL<span>PIOTR NOWAKOWSKI</span></a>
 <div class="nav-links"><a href="index.html" aria-current="page">Strona główna</a><a href="o-mnie.html">O mnie</a><a href="organy.html">Dla syndyków</a><a href="zarzady.html">Dla zarządów</a><a href="wiedza.html">Wiedza</a></div>
 <a class="nav-submit" href="kontakt.html">Umów rozmowę <span aria-hidden="true">↗</span></a>
 <details class="mobile-nav"><summary aria-label="Otwórz menu"><span></span><span></span></summary><div class="dropdown-links"><a href="index.html">Strona główna</a><a href="o-mnie.html">O mnie</a><a href="organy.html">Dla syndyków</a><a href="zarzady.html">Dla zarządów</a><a href="wiedza.html">Wiedza</a><a href="kontakt.html">Kontakt</a><a href="tel:+48515094390">515 09 43 90</a></div></details>
 </nav>
+  </div>
+
+  <!-- HERO: wg zrzutu od klienta, wstawiany osobno. Tu tylko slot. -->
+  <section class="hero-slot" id="hero" aria-label="Hero (slot)">
     <p>Slot na Hero ze zrzutu</p>
   </section>
 
@@ -35,6 +41,7 @@
       <div class="story-hint"><span>Przewiń</span><a href="#start">Pomiń animację</a></div>
       <div class="story-bar"><i></i></div>
     </section>
+  </div>
   </div>
 
 
@@ -177,6 +184,6 @@
   <footer><span>© 2026 PNLEGAL Piotr Nowakowski. Treści mają charakter informacyjny i nie stanowią porady prawnej ani oferty w rozumieniu art. 66 Kodeksu cywilnego.</span></footer>
 
 </div>
-<script src="./nowy.js?v=16"></script>
+<script src="./nowy.js?v=18"></script>
 </body>
 </html>

@@ -26,7 +26,14 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 .hero-slot p { margin: 0; }
 /* menu na stronie głównej: to samo co na podstronach, jasne na ciemnym slocie hero */
 .hero-slot { position: relative; }
-.hero-slot > .nav { position: absolute; top: 0; left: 0; right: 0; text-transform: none; letter-spacing: normal; }
+/* jedno menu dla hero i opowieści: przyklejone tam, gdzie panel (14 px), zjeżdża ze scrollem z ciemnego slotu na jasny panel
+   i odjeżdża razem z nim. Dół toru (wysokość panelu minus wysokość menu) i kolor (nav-dark na ciemnym) dopasowuje nowy.js */
+.top-run { position: relative; }
+.run-track { position: absolute; top: 0; left: 0; right: 0; bottom: calc(100svh - 136px); z-index: 20; pointer-events: none; }
+.run-track > .nav { position: sticky; top: 14px; pointer-events: auto; color: var(--ink); }
+.run-track > .nav.nav-dark { color: var(--light); }
+.run-track > .nav, .run-track > .nav a { transition: color .25s, border-color .25s; }
+@media (max-width: 760px) { .run-track > .nav { top: 8px; } }
 .nav-dark { color: var(--light); }
 .nav-dark .nav-links > a:hover, .nav-dark .nav-links > a[aria-current] { color: var(--sage); }
 .nav-dark .nav-submit { border-color: #edeee84d; }
@@ -44,7 +51,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid #91a67f; outline-offs
 .anim .story-art g[data-s] { visibility: hidden; }
 .anim .story-art [data-f], .anim .story-art [data-op], .anim .story-art [data-loop] { opacity: 0; }
 .anim .draw [data-f] { opacity: 0; }
-.anim .story-steps { display: block; position: absolute; left: 5%; top: clamp(70px, 11vh, 120px); z-index: 2; width: min(560px, 88%); pointer-events: none; }
+.anim .story-steps { display: block; position: absolute; left: 5%; top: calc(clamp(70px, 11vh, 120px) + 48px); z-index: 2; width: min(560px, 88%); pointer-events: none; }
 .story-step { position: absolute; left: 0; right: 0; top: 0; opacity: 0; visibility: hidden; }
 .story-step .eyebrow { display: block; margin-bottom: 18px; font-size: 10px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: #63725e; }
 .story-t { margin: 0; font-size: clamp(30px, 3vw, 50px); font-weight: 400; line-height: 1.06; letter-spacing: -.05em; }
@@ -199,7 +206,7 @@ footer { width: 88%; margin: auto; display: flex; justify-content: space-between
   .story-scene { border-radius: 18px; }
   .anim .story-pin { height: max(800vh, 5600px); }
   .anim .story-scene { top: 8px; height: calc(100svh - 16px); }
-  .anim .story-steps { top: 56px; left: 7%; width: 86%; }
+  .anim .story-steps { top: 104px; left: 7%; width: 86%; }
   .story-t { font-size: 28px; }
   .story-d { font-size: 14px; }
   .anim .story-hint { left: 7%; right: 7%; bottom: 14px; justify-content: space-between; font-size: 10px; }

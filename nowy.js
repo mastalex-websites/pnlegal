@@ -284,4 +284,21 @@
         .catch(function () { status.textContent = 'Otwieram program pocztowy z gotową wiadomością…'; location.href = mailto; });
     });
   }
+
+  /* ---------- E) MENU STRONY GŁÓWNEJ: jedno, zjeżdża ze scrollem z hero na jasny panel opowieści ---------- */
+  (function () {
+    var nav = document.querySelector('.run-track > .nav'), scene = document.querySelector('.story-scene');
+    if (!nav || !scene) return;
+    var track = nav.parentNode;
+    // tor kończy się tak, że menu odkleja się w tej samej chwili co panel i odjeżdża razem z nim
+    function fit() { track.style.bottom = Math.max(0, scene.offsetHeight - nav.offsetHeight) + 'px'; }
+    // jasny tekst na ciemnym slocie hero, ciemny na papierze panelu; przełącza się, gdy krawędź panelu mija środek menu
+    function tone() {
+      var n = nav.getBoundingClientRect(), s = scene.getBoundingClientRect(), mid = n.top + n.height / 2;
+      nav.classList.toggle('nav-dark', !(s.top <= mid && s.bottom >= mid));
+    }
+    addEventListener('scroll', tone, { passive: true });
+    addEventListener('resize', function () { fit(); tone(); });
+    fit(); tone();
+  })();
 })();
