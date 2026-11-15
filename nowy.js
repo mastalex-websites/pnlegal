@@ -29,9 +29,10 @@
     var groups = all('g[data-s]').map(function (g) {
       var els = [].slice.call(g.querySelectorAll('path,rect,circle,ellipse')), n = els.length;
       els.forEach(function (el) { el.setAttribute('pathLength', '1'); el.style.strokeDasharray = '1 1'; el.style.strokeDashoffset = '1'; el.style.visibility = 'hidden'; });
-      return { els: els, s: +g.dataset.s, e: +g.dataset.e, dur: Math.min(1, Math.max(.22, 4 / n)), last: -1 };
+      // T = najkrótszy czas rysowania grupy w sekundach (więcej kresek → dłużej)
+      return { els: els, s: +g.dataset.s, e: +g.dataset.e, dur: Math.min(1, Math.max(.22, 4 / n)), last: -1, v: 0, T: Math.min(2.8, 1.1 + .07 * n) };
     });
-    var fades = all('[data-f]').map(function (el) { return { el: el, q: el.dataset.f.split(' ').map(Number) }; });
+    var fades = all('[data-f]').map(function (el) { return { el: el, q: el.dataset.f.split(' ').map(Number), v: 0 }; });
     var ops = all('[data-op]').map(function (el) { return { el: el, k: J(el, 'data-op') }; });
     var rots = all('[data-rot]').map(function (el) { return J(el, 'data-rot'); });
     var mvs = all('[data-mv]').map(function (el) { return J(el, 'data-mv'); });
@@ -66,17 +67,23 @@
       }
       return 860;
     }
+    // kreska rysuje się spokojnie: nie szybciej niż w T sekund, niezależnie od tempa przewijania
+    function follow(v, goal, T, dt) {
+      if (dt === undefined) return goal;
+      return v < goal ? Math.min(goal, v + dt / T) : Math.max(goal, v - dt / T * 1.6);
+    }
     function turn(l, a) { l.el.setAttribute('transform', 'translate(' + l.b + ') rotate(' + a.toFixed(2) + ')'); }
     var narrow = false;
     function layout() {
       var ratio = innerWidth / innerHeight; narrow = ratio < 1.2;
       svg.setAttribute('preserveAspectRatio', narrow || ratio > 1.85 ? 'xMidYMax meet' : 'xMidYMax slice');
     }
-    function draw(p) {
-      var v = at(K, p), x = v[0], vx = narrow ? v[2] : v[1], vw = narrow ? 1100 : 1800, i;
+    function draw(p, dt) {
+      var v = at(K, p), x = v[0], vx = narrow ? v[2] : v[1], vw = narrow ? 1100 : 1800, i, busy = false;
       svg.setAttribute('viewBox', vx.toFixed(1) + ' 0 ' + vw + ' 1000');
       groups.forEach(function (g) {
-        var gp = clamp((p - g.s) / (g.e - g.s));
+        var goal = clamp((p - g.s) / (g.e - g.s)), gp = g.v = follow(g.v, goal, g.T, dt);
+        if (gp !== goal) busy = true;
         if (gp === g.last) return; g.last = gp;
         var n = g.els.length;
         for (var i = 0; i < n; i++) {
@@ -87,7 +94,8 @@
       fades.forEach(function (f) {
         var q = f.q, o = clamp((p - q[0]) / (q[1] - q[0]));
         if (q.length > 3) o = Math.min(o, 1 - clamp((p - q[2]) / (q[3] - q[2])));
-        f.el.style.opacity = o;
+        f.v = follow(f.v, o, .6, dt); if (f.v !== o) busy = true;
+        f.el.style.opacity = f.v.toFixed(3);
       });
       ops.forEach(function (o) { o.el.style.opacity = at(o.k, p, 1)[0].toFixed(3); });
       rots.forEach(function (o) { o.el.setAttribute('transform', 'rotate(' + at(o.k, p, o.lin)[0].toFixed(2) + ' ' + o.c[0] + ' ' + o.c[1] + ')'); });
@@ -125,17 +133,19 @@
         var b = +s.dataset.s, e = +s.dataset.e, o = Math.min(clamp((p - b) / .02), clamp((e - p) / .02));
         s.style.opacity = o; s.style.visibility = o > 0 ? 'visible' : 'hidden'; s.style.transform = 'translateY(' + ((1 - o) * 14).toFixed(1) + 'px)';
       });
+      return busy;
     }
-    var cur = -1, target = 0, run = false;
+    var cur = -1, target = 0, run = false, last = 0;
     function read() { var rc = pin.getBoundingClientRect(); target = clamp(-rc.top / (pin.offsetHeight - innerHeight)); }
-    function tick() {
-      var d = target - cur;
-      if (Math.abs(d) < .0004) { cur = target; draw(cur); run = false; return; }
-      cur += d * .14; draw(cur); requestAnimationFrame(tick);
+    function tick(now) {
+      var dt = last ? Math.min(.1, (now - last) / 1000) : 1 / 60, d = target - cur;
+      last = now;
+      cur = Math.abs(d) < .0004 ? target : cur + d * .14;
+      if (draw(cur, dt) || cur !== target) requestAnimationFrame(tick); else { run = false; last = 0; }
     }
-    function kick() { read(); if (!run) { run = true; requestAnimationFrame(tick); } }
+    function kick() { read(); if (!run) { run = true; last = 0; requestAnimationFrame(tick); } }
     addEventListener('scroll', kick, { passive: true });
-    addEventListener('resize', function () { layout(); kick(); draw(cur); });
+    addEventListener('resize', function () { layout(); draw(cur, 0); kick(); });
     layout(); read(); cur = target; draw(cur);
   })();
 
